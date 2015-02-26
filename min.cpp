@@ -3,13 +3,11 @@
 #include <fstream>
 #include <iomanip>
 #include <cstdlib>
-#include <TMath.h>
-#include <TRandom3.h>
 
 using namespace std;
 // dichiara var globali e funzioni
 int t =0;
-double r = 6370;
+int r = 6370.;
 double c = 299792.458;
 // vettore posizione tempi satelliti 
 int n = 4; 
@@ -24,19 +22,19 @@ int main(){
 // inizializza
 //cout<<"numero dei satelliti =   "<<endl;
 //cin>>n;
-  double pi = 4*TMath::ATan(1);
+
 double xp;//=906.10;
 double yp;//=634.45;
 double zp;//=6273.23;
-double thetap;
-double phip;
+float thetap;
+float phip;
 cout << "theta punto :";
 cin >> thetap;
 cout << "phi punto :";
 cin >> phip;
 
-thetap = thetap*pi/180.;
-phip = phip*pi/180.;
+thetap = thetap*3.1415926/180.;
+phip = phip*3.1415926/180.;
 xp = r*sin(thetap)*cos(phip);
 yp = r*sin(thetap)*sin(phip);
 zp = r*cos(thetap);
@@ -51,12 +49,15 @@ cout << "(x,y,z) = " << xp <<" "<<yp<<" "<<zp<<" "<< endl;
 xs[1]=-15185;
 ys[1]=0;
 zs[1]=26301.19;
+
 xs[2]=20179.74;
 ys[2]=-7344.82;
 zs[2]=21474.83;
+
 xs[3]=0;
 ys[3]=0;
 zs[3]=30370;
+
 xs[4]=16906.08;
 ys[4]=20147.88;
 zs[4]=15185;
@@ -76,7 +77,7 @@ p[0]=0;
 p[1]=0;
 p[2]=0; 
 // chiama funzione
- min( xs, ys, zs, ts, t, p);
+min( xs, ys, zs, ts, t);
 // restituisci x y z  minimo 
 cout<<"coordinate punto =  ("<<p[0]<<", "<<p[1]<<", "<<p[2]<< ")"<<endl;
 
@@ -87,8 +88,12 @@ return 0;
 
 
 // funzione minimizza
-void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
+void min(double *xs, double *ys, double *zs, double *ts, double t )
 	{
+
+////////////////////////////////////////////////////////
+///  DEFINIZIONE VARIABILI\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
 // in entrata : posizioni satelliti(visti), tempi, t0  
 // inizializza x y z ?
 	double xm=0; 
@@ -104,7 +109,9 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 	double x4 ; double y4; double z4;
 	double chi_temp ; double theta_temp ; double phi_temp;
 	double chi ; double theta; double phi;
-	int passo; double dtheta; double dphi;
+	double dtheta; double dphi;
+	int passo_theta = 1;
+	int passo_phi = 1;
 //proiezione xmedio ymedio zmedio satelliti  sulla superficie della terra!!! fissa r , ricavo theta e phi e ricalcola x y z
 	for (int i = 0; i < n; i++) { 
 		xm =xm+xs[i];
@@ -117,7 +124,7 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 	cout<<"punto medio: "<<xm<<"  "<<ym<<"  "<<zm<<endl;
 	cout << "tan(theta): " << (sqrt(xm*xm + ym*ym)/zm) <<endl;
 	cout << "tan(phi): " << (ym/xm) <<endl; 	
-	theta = atan (sqrt(xm*xm + ym*ym)/zm); 
+	theta = atan(sqrt((xm*xm + ym*ym)/zm)); 
 	phi= atan(ym/xm);
 	cout << "theta: " << theta<< endl;
 	cout << "phi: " << phi<< endl;
@@ -125,32 +132,25 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 	double y = r *sin(theta)*sin(phi);
 	double z = r *cos(theta);
 	chi= funchi(x,y,z,xs,ys,zs,ts,t);
-
 	cout<<"coordinate pto medio sulla terra: "<<x<< " "<<y<<" "<<z<<endl;
-
-	chi1 = chi-1; //perché -1??
-	chi2 = chi-1;
-	chi3 = chi-1;
-	chi4 = chi-1;
-
+	chi1 = chi2=chi3=chi4=chi-1;
 	chi_temp=chi;
-
 	int k=0;
-// incrementa dx dy dz su superficie terrestre = coordinate polari sferiche  r^2 dr dcostheta dphi
-		passo =1;
-		double dcostheta = passo / 6370.;
-		dtheta = dcostheta/sin(theta); 
-		dphi = passo / 6370.;
+// incrementa dx dy dz su superficie terrestre = coordinate polari sferiche  r cost(?) dtheta dphi
+//		passo =1;
+		double dcostheta = passo_theta / 6370.;
+		dtheta = sin(theta)*dcostheta; 
+		dphi = passo_phi / 6370.;
 //		cout << "dtheta,dphi" << dtheta << "," << dphi << endl;
 	// calcolo chi 4 punti vicini: 0+-dtheta 0+-dphi
 		// 0+dtheta
 		theta1=theta+dtheta;
-		if(theta1 < 0 or theta1 > pi)
+		if(theta1 < 0 or theta1 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 1: " << theta1 << endl;
 			}
 		phi1=phi;
-		if(phi1 < 0 or phi1 > 2*pi)
+		if(phi1 < -3.1415926 or phi1 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 1: " << phi1 << endl;
 			}
@@ -162,12 +162,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 //		cout<<"chi1 "<<chi1<<endl;
 		//0-dtheta
 		theta2=theta-dtheta;
-		if(theta2 < 0 or theta2 > pi)
+		if(theta2 < 0 or theta2 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore: theta 2: " << theta2 << endl;
 			}
 		phi2=phi;
-		if(phi2 < 0 or phi2 > 2*pi)
+		if(phi2 < -3.1415926 or phi2 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 2: " << phi2 << endl;
 			}
@@ -179,12 +179,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 //		cout<<"chi2 "<<chi2<<endl;
 		// 0+dphi
 		theta3=theta;
-		if(theta3 < 0 or theta3 > pi)
+		if(theta3 < 0 or theta3 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 3: " << theta3 << endl;
 			}
 		phi3=phi+dphi;
-		if(phi3 < 0 or phi3 > 2*pi)
+		if(phi3 < -3.1415926 or phi3 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 3: " << phi3 << endl;
 			}
@@ -196,12 +196,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 //		cout<<"chi3 "<<chi3<<endl;
 		// 0-dphi
 		theta4=theta;
-		if(theta4 < 0 or theta4 > pi)
+		if(theta4 < 0 or theta4 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 4: " << theta4 << endl;
 			}
 		phi4=phi-dphi;
-		if(phi4 < 0 or phi4 > 2*pi)
+		if(phi4 < -3.1415926 or phi4 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 4: " << phi4 << endl;
 			}
@@ -209,10 +209,11 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 		y4 = r *sin(theta4)*sin(phi4);
 		z4 = r *cos(theta4);
 		chi4 = funchi(x4,y4,z4,xs,ys,zs,ts,t);
+
 //		cout<<"chi4 "<<chi4<<endl;
 //ciclo tentativi : esci con criterio tutti punti vicini chi magg
 	while ( chi1<chi or chi2<chi or chi3<chi or chi4<chi ){
-		chi = chi_temp;
+//		chi = chi_temp;
 		k++;
 
 		// confronto
@@ -240,67 +241,69 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 			phi_temp=phi4;
 				   }
 //conserva chi minimo alla fine di ogni confronto
-//		chi= chi_temp; 
+		chi= chi_temp; 
 		theta=theta_temp; 
 		phi=phi_temp;
-//		cout<<"k "<<k<<endl;
-		dtheta = dcostheta/sin(theta);
+//		if(k<500){
+//			cout<<"k, theta, phi = "<<k<< ", " << theta << ", " << phi<<endl;
+//			}	
+		dtheta = sin(theta)*dcostheta;
 		// 0+dtheta
 		theta1=theta+dtheta;
-		if(theta1 < 0 or theta1 > pi)
+		if(theta1 < 0 or theta1 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 1: " << theta1 << endl;
 			}
 		phi1=phi;
-		if(phi1 < 0 or phi1 > 2*pi)
+		if(phi1 < -3.1415926 or phi1 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 1: " << phi1 << endl;
 			}
-		x1 = r *sin(theta1)*cos(phi);
-		y1 = r *sin(theta1)*sin(phi);
+		x1 = r *sin(theta1)*cos(phi1);
+		y1 = r *sin(theta1)*sin(phi1);
 		z1 = r *cos(theta1);
 		chi1 = funchi(x1,y1,z1,xs,ys,zs,ts,t);
 //		cout<<"chi1 "<<chi1<<endl;
 		//0-dtheta
 		theta2=theta-dtheta;
-		if(theta2 < 0 or theta2 > pi)
+		if(theta2 < 0 or theta2 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 2: " << theta2 << endl;
 			}
 		phi2=phi;
-		if(phi2 < 0 or phi2 > 2*pi)
+		if(phi2 < -3.1415926 or phi2 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 2: " << phi2 << endl;
 			}
-		x2 = r *sin(theta2)*cos(phi);
-		y2 = r *sin(theta2)*sin(phi);
+		x2 = r *sin(theta2)*cos(phi2);
+		y2 = r *sin(theta2)*sin(phi2);
 		z2 = r *cos(theta2);
 		chi2 = funchi(x2,y2,z2,xs,ys,zs,ts,t);
 //		cout<<"chi2 "<<chi2<<endl;
 		// 0+dphi
 		theta3=theta;
-		if(theta3 < 0 or theta3 > pi)
+		if(theta3 < 0 or theta3 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 3: " << theta3 << endl;
 			}
 		phi3=phi+dphi;
-		if(phi3 < 0 or phi3 > 2*pi)
+		if(phi3 < -3.1415926 or phi3 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 3: " << phi3 << endl;
 			}
-		x3 = r *sin(theta)*cos(phi3);
-		y3 = r *sin(theta)*sin(phi3);
-		z3 = r *cos(theta);
+		x3 = r *sin(theta3)*cos(phi3);
+		y3 = r *sin(theta3)*sin(phi3);
+		z3 = r *cos(theta3);
 		chi3 = funchi(x3,y3,z3,xs,ys,zs,ts,t);
 //		cout<<"chi3 "<<chi3<<endl;
 		// 0-dphi
 		theta4=theta;
-		if(theta4 < 0 or theta4 > pi)
+		if(theta4 < 0 or theta4 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 4: " << theta4 << endl;
 			}
 		phi4=phi-dphi;
-		if(phi4 < 0 or phi4 > 2*pi)
+		if(phi4 < -3.1415926 or phi4 > 3.1415926)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 4: " << phi4 << endl;
 			}
@@ -308,12 +311,14 @@ void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 		y4 = r *sin(theta)*sin(phi4);
 		z4 = r *cos(theta);
 		chi4 = funchi(x4,y4,z4,xs,ys,zs,ts,t);
-//		cout<<"chi4 "<<chi4<<endl;
+//		cout<<"i vari theta al passaggio "<<chi4<<endl;
 
 		}
 	p[0]=r*sin(theta)*cos(phi);
 	p[1]=r*sin(theta)*sin(phi);
 	p[2]=r*cos(theta);
+
+	return; 
 	}
 
 
@@ -330,7 +335,7 @@ double funchi(double x, double y, double z, double *xs, double *ys, double *zs, 
 	     yy = (ys[i] -y)*(ys[i] -y);
 	     zz = (zs[i] -z)*(zs[i] -z);
 	     tt = (ts[i] -t)*(ts[i] -t);
-	     chi_v = fabs(chi_v + xx + yy + zz- c*c*tt); //c'è davvero il valore assoluto? Ha senso
+	     chi_v = (chi_v + pow(sqrt(xx + yy + zz)- sqrt(c*c*tt),2));
 	     }
 	   return chi_v;
 	   }
