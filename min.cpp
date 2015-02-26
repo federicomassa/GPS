@@ -3,11 +3,13 @@
 #include <fstream>
 #include <iomanip>
 #include <cstdlib>
+#include <TMath.h>
+#include <TRandom3.h>
 
 using namespace std;
 // dichiara var globali e funzioni
 int t =0;
-int r = 6370.;
+double r = 6370;
 double c = 299792.458;
 // vettore posizione tempi satelliti 
 int n = 4; 
@@ -22,19 +24,19 @@ int main(){
 // inizializza
 //cout<<"numero dei satelliti =   "<<endl;
 //cin>>n;
-
+  double pi = 4*TMath::ATan(1);
 double xp;//=906.10;
 double yp;//=634.45;
 double zp;//=6273.23;
-float thetap;
-float phip;
+double thetap;
+double phip;
 cout << "theta punto :";
 cin >> thetap;
 cout << "phi punto :";
 cin >> phip;
 
-thetap = thetap*3.1415926/180.;
-phip = phip*3.1415926/180.;
+thetap = thetap*pi/180.;
+phip = phip*pi/180.;
 xp = r*sin(thetap)*cos(phip);
 yp = r*sin(thetap)*sin(phip);
 zp = r*cos(thetap);
@@ -74,7 +76,7 @@ p[0]=0;
 p[1]=0;
 p[2]=0; 
 // chiama funzione
-min( xs, ys, zs, ts, t);
+ min( xs, ys, zs, ts, t, p);
 // restituisci x y z  minimo 
 cout<<"coordinate punto =  ("<<p[0]<<", "<<p[1]<<", "<<p[2]<< ")"<<endl;
 
@@ -85,7 +87,7 @@ return 0;
 
 
 // funzione minimizza
-void min(double *xs, double *ys, double *zs, double *ts, double t )
+void min(double *xs, double *ys, double *zs, double *ts, double t, double &p[] )
 	{
 // in entrata : posizioni satelliti(visti), tempi, t0  
 // inizializza x y z ?
@@ -123,25 +125,32 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 	double y = r *sin(theta)*sin(phi);
 	double z = r *cos(theta);
 	chi= funchi(x,y,z,xs,ys,zs,ts,t);
+
 	cout<<"coordinate pto medio sulla terra: "<<x<< " "<<y<<" "<<z<<endl;
-	chi1 = chi2=chi3=chi4=chi-1;
+
+	chi1 = chi-1; //perché -1??
+	chi2 = chi-1;
+	chi3 = chi-1;
+	chi4 = chi-1;
+
 	chi_temp=chi;
+
 	int k=0;
-// incrementa dx dy dz su superficie terrestre = coordinate polari sferiche  r cost(?) dtheta dphi
+// incrementa dx dy dz su superficie terrestre = coordinate polari sferiche  r^2 dr dcostheta dphi
 		passo =1;
 		double dcostheta = passo / 6370.;
-		dtheta = sin(theta)*dcostheta; 
+		dtheta = dcostheta/sin(theta); 
 		dphi = passo / 6370.;
 //		cout << "dtheta,dphi" << dtheta << "," << dphi << endl;
 	// calcolo chi 4 punti vicini: 0+-dtheta 0+-dphi
 		// 0+dtheta
 		theta1=theta+dtheta;
-		if(theta1 < 0 or theta1 > 3.1415926)
+		if(theta1 < 0 or theta1 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 1: " << theta1 << endl;
 			}
 		phi1=phi;
-		if(phi1 < 0 or phi1 > 2*3.1415926)
+		if(phi1 < 0 or phi1 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 1: " << phi1 << endl;
 			}
@@ -153,12 +162,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 //		cout<<"chi1 "<<chi1<<endl;
 		//0-dtheta
 		theta2=theta-dtheta;
-		if(theta2 < 0 or theta2 > 3.1415926)
+		if(theta2 < 0 or theta2 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore: theta 2: " << theta2 << endl;
 			}
 		phi2=phi;
-		if(phi2 < 0 or phi2 > 2*3.1415926)
+		if(phi2 < 0 or phi2 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 2: " << phi2 << endl;
 			}
@@ -170,12 +179,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 //		cout<<"chi2 "<<chi2<<endl;
 		// 0+dphi
 		theta3=theta;
-		if(theta3 < 0 or theta3 > 3.1415926)
+		if(theta3 < 0 or theta3 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 3: " << theta3 << endl;
 			}
 		phi3=phi+dphi;
-		if(phi3 < 0 or phi3 > 2*3.1415926)
+		if(phi3 < 0 or phi3 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 3: " << phi3 << endl;
 			}
@@ -187,12 +196,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 //		cout<<"chi3 "<<chi3<<endl;
 		// 0-dphi
 		theta4=theta;
-		if(theta4 < 0 or theta4 > 3.1415926)
+		if(theta4 < 0 or theta4 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 4: " << theta4 << endl;
 			}
 		phi4=phi-dphi;
-		if(phi4 < 0 or phi4 > 2*3.1415926)
+		if(phi4 < 0 or phi4 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 4: " << phi4 << endl;
 			}
@@ -235,15 +244,15 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 		theta=theta_temp; 
 		phi=phi_temp;
 //		cout<<"k "<<k<<endl;
-		dtheta = sin(theta)*dcostheta;
+		dtheta = dcostheta/sin(theta);
 		// 0+dtheta
 		theta1=theta+dtheta;
-		if(theta1 < 0 or theta1 > 3.1415926)
+		if(theta1 < 0 or theta1 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 1: " << theta1 << endl;
 			}
 		phi1=phi;
-		if(phi1 < 0 or phi1 > 2*3.1415926)
+		if(phi1 < 0 or phi1 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 1: " << phi1 << endl;
 			}
@@ -254,12 +263,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 //		cout<<"chi1 "<<chi1<<endl;
 		//0-dtheta
 		theta2=theta-dtheta;
-		if(theta2 < 0 or theta2 > 3.1415926)
+		if(theta2 < 0 or theta2 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 2: " << theta2 << endl;
 			}
 		phi2=phi;
-		if(phi2 < 0 or phi2 > 2*3.1415926)
+		if(phi2 < 0 or phi2 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 2: " << phi2 << endl;
 			}
@@ -270,12 +279,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 //		cout<<"chi2 "<<chi2<<endl;
 		// 0+dphi
 		theta3=theta;
-		if(theta3 < 0 or theta3 > 3.1415926)
+		if(theta3 < 0 or theta3 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 3: " << theta3 << endl;
 			}
 		phi3=phi+dphi;
-		if(phi3 < 0 or phi3 > 2*3.1415926)
+		if(phi3 < 0 or phi3 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 3: " << phi3 << endl;
 			}
@@ -286,12 +295,12 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 //		cout<<"chi3 "<<chi3<<endl;
 		// 0-dphi
 		theta4=theta;
-		if(theta4 < 0 or theta4 > 3.1415926)
+		if(theta4 < 0 or theta4 > pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:theta 4: " << theta4 << endl;
 			}
 		phi4=phi-dphi;
-		if(phi4 < 0 or phi4 > 2*3.1415926)
+		if(phi4 < 0 or phi4 > 2*pi)
 			{
 			cout << "Oh, oh...mi è sembrato di vedere un errore:phi 4: " << phi4 << endl;
 			}
@@ -305,8 +314,6 @@ void min(double *xs, double *ys, double *zs, double *ts, double t )
 	p[0]=r*sin(theta)*cos(phi);
 	p[1]=r*sin(theta)*sin(phi);
 	p[2]=r*cos(theta);
-
-	return; 
 	}
 
 
@@ -323,7 +330,7 @@ double funchi(double x, double y, double z, double *xs, double *ys, double *zs, 
 	     yy = (ys[i] -y)*(ys[i] -y);
 	     zz = (zs[i] -z)*(zs[i] -z);
 	     tt = (ts[i] -t)*(ts[i] -t);
-	     chi_v = fabs(chi_v + xx + yy + zz- c*c*tt);
+	     chi_v = fabs(chi_v + xx + yy + zz- c*c*tt); //c'è davvero il valore assoluto? Ha senso
 	     }
 	   return chi_v;
 	   }
